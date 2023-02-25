@@ -3,6 +3,8 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Net;
+using DSharpPlus.Lavalink;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -41,15 +43,34 @@ namespace Presli
             {
                 Timeout = TimeSpan.FromMinutes(2)
             });
+            
             var commandsConfig = new CommandsNextConfiguration()
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableMentionPrefix = true,
                 EnableDms = true,
             };
+            
+            var endpoint = new ConnectionEndpoint
+            {
+                Hostname = "127.0.0.1",
+                Port = 2333
+            };
+
+            var lavalinkConfig = new LavalinkConfiguration
+            {
+                Password = "youshallnotpass",
+                RestEndpoint = endpoint,
+                SocketEndpoint = endpoint
+            };
+            
+            var lavalink = discord.UseLavalink();
             var slash = discord.UseSlashCommands();
             slash.RegisterCommands<funCommands>();
+            slash.RegisterCommands<musicCommands>();
             await discord.ConnectAsync();
+            await lavalink.ConnectAsync(lavalinkConfig);
+            
             await Task.Delay(-1);
         }
         private Task OnClientReady(ReadyEventArgs e)
