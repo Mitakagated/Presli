@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus.SlashCommands;
+using Presli.commandGroups;
 
 namespace Presli
 {
@@ -45,11 +47,8 @@ namespace Presli
                 EnableMentionPrefix = true,
                 EnableDms = true,
             };
-            discord.MessageCreated += async (s, e) =>
-            {
-                if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync("fuck you");
-            };
+            var slash = discord.UseSlashCommands();
+            slash.RegisterCommands<funCommands>();
             await discord.ConnectAsync();
             await Task.Delay(-1);
         }
