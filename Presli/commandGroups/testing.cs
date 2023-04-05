@@ -27,7 +27,7 @@ public class testing
             IsLoopRunning = true;
             while (IsLoopRunning)
             {
-                Loop(ctx);
+                await Loop(ctx);
             }
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("Loopa е пуснат"));
@@ -56,7 +56,7 @@ public class testing
         var length = Convert.ToInt32(conn.CurrentState.CurrentTrack.Length.TotalMilliseconds);
         if (conn.CurrentState.PlaybackPosition.TotalMilliseconds == length)
         {
-            conn.SeekAsync(TimeSpan.FromSeconds(0));
+            await conn.SeekAsync(TimeSpan.FromSeconds(0));
         }
     }
 }

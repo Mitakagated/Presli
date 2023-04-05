@@ -15,6 +15,7 @@
       <PackageReference Include="DSharpPlus.Rest" Version="4.3.0" />
       <PackageReference Include="DSharpPlus.SlashCommands" Version="4.3.0" />
       <PackageReference Include="DSharpPlus.VoiceNext" Version="4.3.0" />
+      <PackageReference Include="PuppeteerSharp" Version="9.0.2" />
     </ItemGroup>
 
     <ItemGroup>

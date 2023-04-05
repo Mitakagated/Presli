@@ -140,16 +140,13 @@ public class musicCommands : ApplicationCommandModule
     }
     
     [SlashCommand("toggleloop", "tekushtata pesen da se povtarq")]
-    public static async Task toggleloop(InteractionContext ctx, CancellationToken token = default)
+    public static async Task toggleloop(InteractionContext ctx,  [Choice("on", "true")]
+        [Choice("off", "false")]
+        [Option("toggle", "Дали да се повтаря или не")]bool toggle)
     {
-        
-        var isTrackRunning = loop.Loop(ctx).Status == TaskStatus.Running;
-        // Check if loop is running
-        if (isTrackRunning) 
-        {
-            // Start loop
-            var isLoopActive = true;
-            while (isLoopActive)
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        // Start loop
+            if (toggle == true)
             {
                 if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
                 {
@@ -169,17 +166,19 @@ public class musicCommands : ApplicationCommandModule
                 }
 
                 var length = Convert.ToInt32(conn.CurrentState.CurrentTrack.Length.TotalMilliseconds);
-                if (conn.CurrentState.PlaybackPosition.TotalMilliseconds == length)
+                if (conn.CurrentState.PlaybackPosition.Equals(conn.CurrentState.PlaybackPosition.TotalSeconds - 1))
                 {
                     await conn.SeekAsync(TimeSpan.FromSeconds(0));
                 }
             }
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent("Loopa е спрян"));
-        }
-        
-        //loop.Loop(ctx).Dispose();
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent("Няма loop"));
+                .WithContent("Loopa е пуснат"));
+            if (toggle == false)
+            {
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                    .WithContent("Loopa е спрян"));
+            }
+            
+            
     }
 }

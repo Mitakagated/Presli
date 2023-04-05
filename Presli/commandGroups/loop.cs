@@ -28,7 +28,7 @@ public class loop
         var length = Convert.ToInt32(conn.CurrentState.CurrentTrack.Length.TotalMilliseconds);
         if (conn.CurrentState.PlaybackPosition.TotalMilliseconds == length)
         {
-            conn.SeekAsync(TimeSpan.FromSeconds(0));
+            await conn.SeekAsync(TimeSpan.FromSeconds(0));
         }
     }
 }
