@@ -1,14 +1,26 @@
+using System.Text;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.SlashCommands;
+using Presli.Classes;
+using PuppeteerSharp;
 
 namespace Presli.commandGroups;
 
 public class musicCommands : ApplicationCommandModule
 {
+    SongsQueue songs = SongsQueue.Instance;
+    LavalinkTrack? player;
+
+    public enum TypeSearches
+    {
+        Search,
+        Link
+    }
+
     [SlashCommand("vlizai", "shte vlqza v talk (ne moga da govorq)")]
     public async Task Join(InteractionContext ctx)
     {
@@ -62,16 +74,10 @@ public class musicCommands : ApplicationCommandModule
                 .WithContent("NAPUSKAM"));
     }
     [SlashCommand("puskai", "shte probvam da sym DJ :sunglasses:")]
-    public async Task Play(InteractionContext ctx, [Option("search", "tyrsi neshto idk")] string search)
+    public async Task Play(InteractionContext ctx, [Option("РежимНаТърсене", "Избор между нормално търсене, или с линк")] TypeSearches searchType, [Option("Search", "Полето за търсене")] string search)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
         var lava = ctx.Client.GetLavalink();
-        // if (!lava.ConnectedNodes.Any())
-        // {
-        //     await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-        //             .WithContent("nqma vryzka sys satelita"));
-        //     return;
-        // }
 
         var node = lava.ConnectedNodes.Values.First();
         if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
@@ -81,7 +87,7 @@ public class musicCommands : ApplicationCommandModule
             return;
         }
         await ctx.Member.VoiceState.Channel.ConnectAsync(node);
-        
+
         var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
 
         if (conn == null)
@@ -91,9 +97,19 @@ public class musicCommands : ApplicationCommandModule
             return;
         }
 
-        var loadResult = await node.Rest.GetTracksAsync(search);
+        LavalinkLoadResult loadResult = new LavalinkLoadResult();
 
-        if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed 
+        if (searchType == TypeSearches.Search)
+        {
+            loadResult = await node.Rest.GetTracksAsync(search);
+        }
+        else if (searchType == TypeSearches.Link)
+        {
+            Uri uri = new Uri(search);
+            loadResult = await node.Rest.GetTracksAsync(uri);
+        }
+
+        if (loadResult.LoadResultType == LavalinkLoadResultType.LoadFailed
             || loadResult.LoadResultType == LavalinkLoadResultType.NoMatches)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
@@ -101,12 +117,50 @@ public class musicCommands : ApplicationCommandModule
             return;
         }
 
-        var track = loadResult.Tracks.First();
+        if (loadResult.LoadResultType == LavalinkLoadResultType.TrackLoaded)
+        {
+            var track = loadResult.Tracks.First();
+            songs.EnqueueSong(track);
+        }
+        else if (loadResult.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
+        {
+            var track = loadResult.Tracks;
+            songs.EnqueueSong(track);
+        }
 
-        await conn.PlayAsync(track);
+        if (conn.CurrentState.CurrentTrack == null)
+        {
+            player = songs.DequeueSong();
+            await conn.PlayAsync(player);
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"ЯША ВЕ {player.Title} :sunglasses:"));
+        }
+        else
+        {
+            string condition;
+            if (loadResult.Tracks.Count() > 1 || loadResult.Tracks.Count() == null)
+            {
+                condition = "песни";
+            }
+            else
+            {
+                condition = "песен";
+            }
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                .WithContent($"ЯША ВЕ {track.Title} :sunglasses:"));
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"Заредих {loadResult.Tracks.Count()} {condition}"));
+        }
+        conn.PlaybackFinished += async (sender, e) =>
+        {
+            if (conn.CurrentState.CurrentTrack != null)
+            {
+                await ctx.CreateResponseAsync(new DiscordInteractionResponseBuilder()
+                    .WithContent($"ЯША ВЕ {player.Title} :sunglasses:"));
+            }
+        };
+
+        //await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
+        //    .WithContent("Добавих в списъка с песни :sunglasses:"));
     }
 
     [SlashCommand("pauzirai", "pochivka? nqma problem")]
@@ -140,45 +194,89 @@ public class musicCommands : ApplicationCommandModule
     }
     
     [SlashCommand("toggleloop", "tekushtata pesen da se povtarq")]
-    public static async Task toggleloop(InteractionContext ctx,  [Choice("on", "true")]
-        [Choice("off", "false")]
-        [Option("toggle", "Дали да се повтаря или не")]bool toggle)
+    public async Task LoopToggle(InteractionContext ctx)
     {
-        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        // Start loop
-            if (toggle == true)
-            {
-                if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
-                {
-                    await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                        .WithContent("pyrvo voice channel, sled tova DJ time :sunglasses:"));
-                    return;
-                }
-                var lava = ctx.Client.GetLavalink();
-                var node = lava.ConnectedNodes.Values.First();
-                var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+        songs.ToggleLoop();
 
-                if (conn == null)
-                {
-                    await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                        .WithContent("nqma vryzka sys satelita"));
-                    return;
-                }
-
-                var length = Convert.ToInt32(conn.CurrentState.CurrentTrack.Length.TotalMilliseconds);
-                if (conn.CurrentState.PlaybackPosition.Equals(conn.CurrentState.PlaybackPosition.TotalSeconds - 1))
-                {
-                    await conn.SeekAsync(TimeSpan.FromSeconds(0));
-                }
-            }
+        if (songs.loopEnabled == true)
+        {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("Loopa е пуснат"));
-            if (toggle == false)
-            {
-                await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-                    .WithContent("Loopa е спрян"));
-            }
-            
-            
+        }
+
+        if (songs.loopEnabled == false)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent("Loopa е спрян"));
+        }
+    }
+
+    [SlashCommand("skip", "Пропуска текущата песен, и пуска следваща ако има")]
+    public async Task Skip(InteractionContext ctx)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        if (ctx.Member.VoiceState == null || ctx.Member.VoiceState.Channel == null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                    .WithContent("pyrvo voice channel, sled tova DJ time :sunglasses:"));
+            return;
+        }
+
+        var lava = ctx.Client.GetLavalink();
+        var node = lava.ConnectedNodes.Values.First();
+        var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+
+        if (conn == null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                    .WithContent("nqma vryzka sys satelita"));
+            return;
+        }
+        if (conn.CurrentState.CurrentTrack == null)
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                    .WithContent("Няма какво да се skipne :XD:"));
+            return;
+        }
+        await conn.PlayAsync(songs.DequeueSong());
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"Продължаваме с {conn.CurrentState.CurrentTrack}"));
+    }
+
+    [SlashCommand("showsongs", "Показва всички песни")]
+    public async Task ShowSongs(InteractionContext ctx)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        //StringBuilder response = new StringBuilder();
+        //foreach (var song in songs.songQueue)
+        //{
+        //    response.AppendLine(song.Title).ToString();
+        //}
+        //response.AppendLine($"Общ брой песни: {songs.songQueue.Count}");
+        //var lines = response.ToString().Split('\n');
+        //var responseLines = () =>
+        //{
+        //    var responseLines = new List<string>();
+        //    for (int i = 0; i < lines.Length/5; i++)
+        //    {
+        //        var response = new StringBuilder();
+        //        for (int j = 0; j < 5; j++)
+        //        {
+        //            response.AppendLine(lines[i]);
+        //        }
+        //        responseLines.Add(response.ToString());
+        //    }
+        //    return responseLines.ToArray();
+        //};
+        
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .AddEmbed(new DiscordEmbedBuilder()
+                        .WithColor(DiscordColor.White)
+                        .WithTitle("Брой песни:")
+                        .WithDescription($"{songs.songQueue.Count}")
+                        .WithFooter("PresliTheBest56")
+                        .Build())
+            .WithTTS(true));
     }
 }

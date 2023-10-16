@@ -2,6 +2,7 @@
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using HtmlAgilityPack;
 using Presli.Classes;
 
 namespace Presli.commandGroups;
@@ -29,7 +30,7 @@ public class funCommands : ApplicationCommandModule
 
         foreach (var number in nums)
         {
-            response += number + " ";
+            response += $"{number} ";
         }
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
@@ -41,12 +42,30 @@ public class funCommands : ApplicationCommandModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-        string[] cardPaths = Directory.GetFiles(@"D:\VS Projects\Presli\Presli\Presli\yugioh");
-        var random = new Random();
-        var randomCardNumber = random.Next(0, cardPaths.Length);
-        var randomCard = cardPaths[randomCardNumber];
-
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .AddFile(randomYuGiOhCard.RandomCard()));
+    }
+    [SlashCommand("random_gif", "Произволен gif с мен")]
+    public async Task ScrapeGif(InteractionContext ctx)
+    {
+        await ctx.CreateResponseAsync (InteractionResponseType.DeferredChannelMessageWithSource);
+
+        string url = "https://tenor.com/search/aethelthryth-gifs";
+        HttpClient client = new HttpClient();
+        string html = client.GetStringAsync(url).Result;
+        HtmlDocument tenor = new HtmlDocument();
+
+        tenor.LoadHtml(html);
+        var gif = tenor.DocumentNode.Descendants("img")
+            .Where(img => img.GetAttributeValue("alt", "")
+            .Contains("Aethelthryth"))
+            .Select(node => node.GetAttributeValue("src", ""))
+            .ToList();
+
+        var number = Random.Shared.Next(gif.Count);
+        var response = gif[number];
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"{response}"));
     }
 }
