@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Presli.Classes
 {
-    internal class randomYuGiOhCard
+    internal static class randomYuGiOhCard
     {
         public static FileStream RandomCard()
         {
-            string[] cardPaths = Directory.GetFiles(@"D:\VS Projects\Presli\Presli\Presli\yugioh");
+            string[] cardPaths = Directory.GetFiles("./yugioh");
             var random = new Random();
             var randomCardNumber = random.Next(0, cardPaths.Length);
             var randomCard = cardPaths[randomCardNumber];

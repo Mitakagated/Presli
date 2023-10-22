@@ -24,17 +24,9 @@ namespace Presli
 
         public async Task MainAsync()
         {
-            var json = "";
-            using (var fs = File.OpenRead("config.json"))
-            using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
-                json = await sr.ReadToEndAsync();
-
-            var configJson = JsonConvert.DeserializeObject<ConfigJSON>(json);
-
-
             var discord = new DiscordClient(new DiscordConfiguration()
             {
-                Token = configJson.Token,
+                Token = Environment.GetEnvironmentVariable("token"),
                 TokenType = TokenType.Bot,
                 AutoReconnect = true,
                 Intents = DiscordIntents.All
@@ -44,16 +36,9 @@ namespace Presli
                 Timeout = TimeSpan.FromMinutes(2)
             });
             
-            var commandsConfig = new CommandsNextConfiguration()
-            {
-                StringPrefixes = new string[] { configJson.Prefix },
-                EnableMentionPrefix = true,
-                EnableDms = true,
-            };
-            
             var endpoint = new ConnectionEndpoint
             {
-                Hostname = "127.0.0.1",
+                Hostname = "lavalink",
                 Port = 2333
             };
 

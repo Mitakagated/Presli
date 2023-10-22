@@ -12,7 +12,7 @@ namespace Presli.commandGroups;
 
 public class musicCommands : ApplicationCommandModule
 {
-    SongsQueue songs = SongsQueue.Instance;
+    readonly SongsQueue songs = SongsQueue.Instance;
     LavalinkTrack? player;
 
     public enum TypeSearches
@@ -138,7 +138,7 @@ public class musicCommands : ApplicationCommandModule
         else
         {
             string condition;
-            if (loadResult.Tracks.Count() > 1 || loadResult.Tracks.Count() == null)
+            if (loadResult.Tracks.Count() > 1 || loadResult.Tracks.Any())
             {
                 condition = "песни";
             }
@@ -154,13 +154,13 @@ public class musicCommands : ApplicationCommandModule
         {
             if (conn.CurrentState.CurrentTrack != null)
             {
-                await ctx.CreateResponseAsync(new DiscordInteractionResponseBuilder()
-                    .WithContent($"ЯША ВЕ {player.Title} :sunglasses:"));
+                await ctx.Channel.SendMessageAsync($"ЯША ВЕ {conn.CurrentState.CurrentTrack.Title} :sunglasses:");
+            }
+            else
+            {
+                await ctx.Channel.SendMessageAsync($"Дотук с траковете");
             }
         };
-
-        //await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-        //    .WithContent("Добавих в списъка с песни :sunglasses:"));
     }
 
     [SlashCommand("pauzirai", "pochivka? nqma problem")]
@@ -198,13 +198,13 @@ public class musicCommands : ApplicationCommandModule
     {
         songs.ToggleLoop();
 
-        if (songs.loopEnabled == true)
+        if (songs.loopEnabled)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("Loopa е пуснат"));
         }
 
-        if (songs.loopEnabled == false)
+        if (!songs.loopEnabled)
         {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder()
                 .WithContent("Loopa е спрян"));
@@ -247,29 +247,7 @@ public class musicCommands : ApplicationCommandModule
     public async Task ShowSongs(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        //StringBuilder response = new StringBuilder();
-        //foreach (var song in songs.songQueue)
-        //{
-        //    response.AppendLine(song.Title).ToString();
-        //}
-        //response.AppendLine($"Общ брой песни: {songs.songQueue.Count}");
-        //var lines = response.ToString().Split('\n');
-        //var responseLines = () =>
-        //{
-        //    var responseLines = new List<string>();
-        //    for (int i = 0; i < lines.Length/5; i++)
-        //    {
-        //        var response = new StringBuilder();
-        //        for (int j = 0; j < 5; j++)
-        //        {
-        //            response.AppendLine(lines[i]);
-        //        }
-        //        responseLines.Add(response.ToString());
-        //    }
-        //    return responseLines.ToArray();
-        //};
         
-
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
                         .WithColor(DiscordColor.White)

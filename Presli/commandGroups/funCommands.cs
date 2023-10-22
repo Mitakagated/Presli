@@ -68,4 +68,20 @@ public class funCommands : ApplicationCommandModule
         await ctx.EditResponseAsync(new DiscordWebhookBuilder()
             .WithContent($"{response}"));
     }
+    [SlashCommand("send_direct_msg", "Произволен текст на юзера")]
+    public async Task SendDirectMsg(InteractionContext ctx,[Option("съобщение", "Съобщение което да ти изпратя на лично")] string msg)
+    {
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        await ctx.Member.SendMessageAsync(msg);
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent("Пратих ти ;)"));
+
+        //ctx.Client.MessageCreated += async (s, e) =>
+        //{
+        //    if (!e.Message.Author.IsBot)
+        //    {
+        //        await ctx.Member.SendMessageAsync(e.Message.Content);
+        //    }
+        //};
+    }
 }
