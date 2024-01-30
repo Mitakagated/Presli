@@ -6,7 +6,6 @@ using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.SlashCommands;
 using Presli.Classes;
-using PuppeteerSharp;
 
 namespace Presli.commandGroups;
 

@@ -13,6 +13,9 @@ using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.SlashCommands;
 using Presli.commandGroups;
+using Microsoft.Extensions.DependencyInjection;
+using Presli.Models;
+using Presli.Classes;
 
 namespace Presli
 {
@@ -35,6 +38,10 @@ namespace Presli
             {
                 Timeout = TimeSpan.FromMinutes(2)
             });
+
+            var services = new ServiceCollection()
+                .AddSingleton<IConfiguration, Configuration>()
+                .BuildServiceProvider();
             
             var endpoint = new ConnectionEndpoint
             {
@@ -50,9 +57,14 @@ namespace Presli
             };
             
             var lavalink = discord.UseLavalink();
-            var slash = discord.UseSlashCommands();
+            var slash = discord.UseSlashCommands(new SlashCommandsConfiguration()
+            {
+                Services = services
+            });
             slash.RegisterCommands<funCommands>();
             slash.RegisterCommands<musicCommands>();
+            slash.RegisterCommands<MitoCommands>();
+            slash.RegisterCommands<BettingCommands>();
             await discord.ConnectAsync();
             await lavalink.ConnectAsync(lavalinkConfig);
             
