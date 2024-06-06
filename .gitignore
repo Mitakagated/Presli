@@ -407,3 +407,4 @@ config.json
 /docker-compose.vs.debug.yml
 /docker-compose.override.yml
 /docker-compose.dcproj
+/Presli/.env

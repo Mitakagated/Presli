@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dapper;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -14,8 +13,6 @@ using Presli.Models;
 namespace Presli.commandGroups;
 public class BettingCommands : ApplicationCommandModule
 {
-    public IConfiguration? Configuration { private get; set; }
-
     [SlashCommand("bet", "betting commands")]
     public async Task Bet(InteractionContext ctx)
     {

@@ -5,14 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Presli.Classes;
-public class Configuration : IConfiguration
+public static class Configuration
 {
-    private readonly string? dbServer = Environment.GetEnvironmentVariable("DB_SERVER");
-    private readonly string? dbName = Environment.GetEnvironmentVariable("DB_NAME");
-    private readonly string? dbUser = Environment.GetEnvironmentVariable("DB_USER");
-    private readonly string? dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
-    public string GetConnectionString()
+    private static readonly string? dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+    private static readonly string? dbName = Environment.GetEnvironmentVariable("DB_NAME");
+    private static readonly string? dbUser = Environment.GetEnvironmentVariable("DB_USER");
+    private static readonly string? dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+    private static readonly string? dbPort = Environment.GetEnvironmentVariable("DB_PORT");
+    public static string GetConnectionString()
     {
-        return $"Server={dbServer};Port=5432;Database={dbName};User Id={dbUser};Password={dbPassword};";
+        return $"host={dbHost}; port={dbPort}; database={dbName}; user id={dbUser}; password={dbPassword}";
     }
 }

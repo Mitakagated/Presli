@@ -5,26 +5,24 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dapper;
 using DSharpPlus.SlashCommands;
-using Npgsql;
+using Microsoft.EntityFrameworkCore;
 using Presli.Models;
 
 namespace Presli.Classes;
 public static class DatabaseHelper
 {
-    private static readonly IConfiguration configuration = new Configuration();
-    public static async Task<CurrencyInfo> GetCurrencyInfo(InteractionContext ctx)
+    public static async Task<CurrencyInfo> GetCurrencyInfo(ulong discordId)
     {
         CurrencyInfo? acc;
-        var discordId = new { Id = (long)ctx.User.Id };
-        using (var db = new NpgsqlConnection(configuration.GetConnectionString()))
+        using (var db = new CurrencyInfoContext())
         {
-            acc = await db.QuerySingleOrDefaultAsync<CurrencyInfo>("SELECT * FROM currencyinfo WHERE discord_id = @Id", discordId);
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
             if (acc is null)
             {
-                await db.ExecuteAsync("INSERT INTO currencyinfo (discord_id, mito_currency, betting_currency) VALUES (@Id, 500, 500)", discordId);
-                acc = await db.QuerySingleAsync<CurrencyInfo>("SELECT * FROM currencyinfo WHERE discord_id = @Id", discordId);
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
             }
         }
         return acc;
