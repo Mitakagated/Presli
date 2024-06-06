@@ -399,3 +399,12 @@ FodyWeavers.xsd
 
 # Bot Config
 config.json
+/Presli/config.json
+/Presli/Properties/launchSettings.json
+/docker-compose.yml
+/docker-compose.yml
+/docker-compose.vs.release.yml
+/docker-compose.vs.debug.yml
+/docker-compose.override.yml
+/docker-compose.dcproj
+/Presli/.env
