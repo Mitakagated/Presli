@@ -18,6 +18,8 @@ using Microsoft.Extensions.Hosting;
 using Lavalink4NET;
 using Lavalink4NET.Extensions;
 using Microsoft.Extensions.Logging;
+using Lavalink4NET.Players.Queued;
+using Microsoft.Extensions.Options;
 
 var builder = new HostApplicationBuilder(args);
 
@@ -30,7 +32,8 @@ builder.Services.AddSingleton(new DiscordConfiguration
     Token = Environment.GetEnvironmentVariable("token"),
     TokenType = TokenType.Bot,
     AutoReconnect = true,
-    Intents = DiscordIntents.All
+    Intents = DiscordIntents.All,
+    MinimumLogLevel = LogLevel.Debug
 });
 builder.Services.AddSingleton(new InteractivityConfiguration
 {
@@ -39,22 +42,25 @@ builder.Services.AddSingleton(new InteractivityConfiguration
 
 builder.Services.AddLavalink();
 
-builder.Services.AddLogging(s => s.AddConsole().SetMinimumLevel(LogLevel.Trace));
+builder.Services.AddSingleton(cfg => cfg.GetService<IOptions<QueuedLavalinkPlayerOptions>>().Value);
 
 builder.Build().Run();
 
-file sealed class Bot : BackgroundService
+public sealed class Bot : BackgroundService
 {
     private readonly DiscordClient _client;
     private readonly IAudioService _audioService;
+    private readonly IOptions<QueuedLavalinkPlayerOptions> _options;
 
-    public Bot(DiscordClient client, IAudioService audioService)
+    public Bot(DiscordClient client, IAudioService audioService, IOptions<QueuedLavalinkPlayerOptions> options)
     {
         ArgumentNullException.ThrowIfNull(client);
         ArgumentNullException.ThrowIfNull(audioService);
+        ArgumentNullException.ThrowIfNull(options);
 
         _client = client;
         _audioService = audioService;
+        _options = options;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -62,7 +68,9 @@ file sealed class Bot : BackgroundService
         _client.UseInteractivity();
         var slash = _client.UseSlashCommands(new SlashCommandsConfiguration
         {
-            Services = new ServiceCollection().AddLavalink().BuildServiceProvider()
+            Services = new ServiceCollection().AddSingleton<PlayerHelper>(new PlayerHelper(_audioService, _options))
+                                              .AddSingleton<IAudioService>(_audioService)
+                                              .BuildServiceProvider()
         });
         slash.RegisterCommands<funCommands>();
         slash.RegisterCommands<musicCommands>();

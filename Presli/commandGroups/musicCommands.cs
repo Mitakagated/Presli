@@ -15,50 +15,42 @@ namespace Presli.commandGroups;
 
 public class musicCommands : ApplicationCommandModule
 {
-    public IAudioService _audioService { get; set; }
-    private readonly IOptions<QueuedLavalinkPlayerOptions> _options = (IOptions<QueuedLavalinkPlayerOptions>) new QueuedLavalinkPlayerOptions { Label = "Presli" };
+    public PlayerHelper PlayerHelper {  get; set; }
+    public IAudioService audioService { get; set; }
+    private TrackSearchMode[] trackSearchModes = { TrackSearchMode.YouTube, TrackSearchMode.YouTubeMusic, TrackSearchMode.YandexMusic, TrackSearchMode.AppleMusic, TrackSearchMode.Deezer, TrackSearchMode.SoundCloud, TrackSearchMode.Spotify, TrackSearchMode.None };
 
-    readonly SongsQueue songs = SongsQueue.Instance;
-
-    public musicCommands(IAudioService audioService)
+    public enum SearchModes
     {
-        _audioService = audioService;
+        Youtube = 0,
+        YoutubeMusic = 1,
+        YandexMusic = 2,
+        AppleMusic = 3,
+        Deezer = 4,
+        SoundCloud = 5,
+        Spotify = 6,
+        None = 7
     }
 
-    public enum TypeSearches
+    [SlashCommand("vlizai", "shte vlqza v talk (ne moga da govorq)")]
+    public async Task Join(InteractionContext ctx)
     {
-        Search,
-        Link
+        await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: true).ConfigureAwait(false);
+
+        if (player == null)
+        {
+            return;
+        }
+
+        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+                .WithContent($"vytre sym v {ctx.Member.VoiceState.Channel}"));
     }
-
-    //[SlashCommand("vlizai", "shte vlqza v talk (ne moga da govorq)")]
-    //public async Task Join(InteractionContext ctx)
-    //{
-    //    await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-    //    var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false).ConfigureAwait(false);
-
-    //    if (player == null)
-    //    {
-    //        return;
-    //    }
-
-    //    if (ctx.Member.VoiceState.Channel.Type != ChannelType.Voice)
-    //    {
-    //        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-    //                .WithContent("pyrvo voice channel, sled tova shte prisystvam"));
-    //        return;
-    //    }
-
-    //    await ctx.Member.VoiceState.Channel.ConnectAsync(node);
-    //    await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-    //            .WithContent($"vytre sym v {ctx.Member.VoiceState.Channel}"));
-    //}
 
     [SlashCommand("NAPUSNI", "shte napusna bezceremonno")]
     public async Task Leave(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false).ConfigureAwait(false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false).ConfigureAwait(false);
 
         if (player == null)
         {
@@ -70,26 +62,26 @@ public class musicCommands : ApplicationCommandModule
                 .WithContent("НАПУСКАМ"));
     }
     [SlashCommand("puskai", "shte probvam da sym DJ :sunglasses:")]
-    public async Task Play(InteractionContext ctx, [Option("РежимНаТърсене", "Избор между нормално търсене, или с линк")] TypeSearches searchType, [Option("Search", "Полето за търсене")] string search)
+    public async Task Play(InteractionContext ctx, [Option("Search", "Полето за търсене")] string search, [Option("Provider", "Мястото, откъдето ще търся за музика")] SearchModes searchMode)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: true).ConfigureAwait(false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: true).ConfigureAwait(false);
 
         if (player == null)
         {
             return;
         }
 
-        var track = await _audioService.Tracks
-        .LoadTrackAsync(search, TrackSearchMode.YouTube)
+        var track = await audioService.Tracks
+        .LoadTrackAsync(search, trackSearchModes[(int)searchMode])
         .ConfigureAwait(false);
 
         if (track is null)
         {
             await ctx.FollowUpAsync(new DiscordFollowupMessageBuilder
             {
-                Content = "tyrseneto za {search} napravi abort"
+                Content = $"tyrseneto za {search} napravi abort"
             }).ConfigureAwait(false);
             return;
         }
@@ -99,58 +91,13 @@ public class musicCommands : ApplicationCommandModule
         {
             Content = $"ЯША ВЕ {track.Title} :sunglasses:"
         }).ConfigureAwait(false);
-
-        //if (loadResult.LoadResultType == LavalinkLoadResultType.TrackLoaded)
-        //{
-        //    var track = loadResult.Tracks.First();
-        //    songs.EnqueueSong(track);
-        //}
-        //else if (loadResult.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
-        //{
-        //    var track = loadResult.Tracks;
-        //    songs.EnqueueSong(track);
-        //}
-
-        //if (conn.CurrentState.CurrentTrack == null)
-        //{
-        //    player = songs.DequeueSong();
-        //    await conn.PlayAsync(player);
-        //    await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-        //        .WithContent($"ЯША ВЕ {player.Title} :sunglasses:"));
-        //}
-        //else
-        //{
-        //    string condition;
-        //    if (loadResult.Tracks.Count() > 1 || loadResult.Tracks.Any())
-        //    {
-        //        condition = "песни";
-        //    }
-        //    else
-        //    {
-        //        condition = "песен";
-        //    }
-
-        //    await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-        //        .WithContent($"Заредих {loadResult.Tracks.Count()} {condition}"));
-        //}
-        //conn.PlaybackFinished += async (sender, e) =>
-        //{
-        //    if (conn.CurrentState.CurrentTrack != null)
-        //    {
-        //        await ctx.Channel.SendMessageAsync($"ЯША ВЕ {conn.CurrentState.CurrentTrack.Title} :sunglasses:");
-        //    }
-        //    else
-        //    {
-        //        await ctx.Channel.SendMessageAsync($"Дотук с траковете");
-        //    }
-        //};
     }
 
     [SlashCommand("pauzirai", "pochivka? nqma problem")]
     public async Task Pause(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         {
@@ -170,7 +117,7 @@ public class musicCommands : ApplicationCommandModule
     [SlashCommand("prodylji", "Пускам откъдето стигнахме.")]
     public async Task Resume(InteractionContext ctx)
     {
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         {
@@ -190,7 +137,7 @@ public class musicCommands : ApplicationCommandModule
     [SlashCommand("toggleloop", "tekushtata pesen da se povtarq")]
     public async Task LoopToggle(InteractionContext ctx)
     {
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         { 
@@ -213,7 +160,7 @@ public class musicCommands : ApplicationCommandModule
     public async Task Skip(InteractionContext ctx)
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         {
@@ -243,7 +190,7 @@ public class musicCommands : ApplicationCommandModule
     [SlashCommand("stop", "Спира музиката, без да напускам.")]
     public async Task Stop(InteractionContext ctx)
     {
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         {
@@ -265,7 +212,7 @@ public class musicCommands : ApplicationCommandModule
     {
         await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
 
-        var player = await GetPlayerAsync(ctx, connectToVoiceChannel: false);
+        var player = await PlayerHelper.GetPlayerAsync(ctx, connectToVoiceChannel: false);
 
         if (player is null)
         {
@@ -280,35 +227,5 @@ public class musicCommands : ApplicationCommandModule
                         .WithFooter("PresliTheBest56")
                         .Build())
             .WithTTS(true));
-    }
-
-    [SlashCommand("nepipai", "not a command")]
-    [SlashRequireOwner]
-    public async Task<QueuedLavalinkPlayer?> GetPlayerAsync(InteractionContext ctx,[Option("nqma_takova", "pi6ok")] bool connectToVoiceChannel = true)
-    {
-        var channelBehavior = connectToVoiceChannel
-            ? PlayerChannelBehavior.Join
-            : PlayerChannelBehavior.None;
-
-        var retrieveOptions = new PlayerRetrieveOptions(ChannelBehavior: channelBehavior);
-
-        var result = await _audioService.Players
-            .RetrieveAsync(ctx.Guild.Id, ctx.Member.VoiceState.Channel.Id, playerFactory: PlayerFactory.Queued, _options, retrieveOptions)
-            .ConfigureAwait(false);
-
-        if (!result.IsSuccess)
-        {
-            var errorMessage = result.Status switch
-            {
-                PlayerRetrieveStatus.UserNotInVoiceChannel => "Първо voice channel, след това ще присъствам.",
-                PlayerRetrieveStatus.BotNotConnected => "Няма връзка със сателита.",
-                _ => "ИСКАМ ДА МРЪДНА",
-            };
-
-            await ctx.CreateResponseAsync(errorMessage).ConfigureAwait(false);
-            return null;
-        }
-
-        return result.Player;
     }
 }

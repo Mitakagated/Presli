@@ -10,7 +10,7 @@ namespace Presli.Classes
     {
         public static FileStream RandomCard()
         {
-            string[] cardPaths = Directory.GetFiles("./yugioh");
+            string[] cardPaths = Directory.GetFiles("../../.././yugioh");
             var random = new Random();
             var randomCardNumber = random.Next(0, cardPaths.Length);
             var randomCard = cardPaths[randomCardNumber];
