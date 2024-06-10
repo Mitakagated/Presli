@@ -27,4 +27,126 @@ public static class DatabaseHelper
         }
         return acc;
     }
+
+    public static async Task<int> AddMito(ulong discordId, int mito)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            acc.Mito += mito;
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return acc.Mito;
+        }
+    }
+
+    public static async Task<int> RemoveMito(ulong discordId, int mito)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            if (acc.Mito - mito <= 0)
+            {
+                await db.SaveChangesAsync().ConfigureAwait(false);
+                return acc.BettingCurrency - mito;
+            }
+            acc.Mito -= mito;
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return acc.Mito;
+        }
+    }
+
+    public static async Task<int> AddBettingCurrency(ulong discordId, int bettingCurrency)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            acc.BettingCurrency += bettingCurrency;
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return acc.BettingCurrency;
+        }
+    }
+
+    public static async Task<int> RemoveBettingCurrency(ulong discordId, int bettingCurrency)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            if (acc.BettingCurrency - bettingCurrency <= 0)
+            {
+                await db.SaveChangesAsync().ConfigureAwait(false);
+                return acc.BettingCurrency - bettingCurrency;
+            }
+            acc.BettingCurrency -= bettingCurrency;
+            await db.SaveChangesAsync().ConfigureAwait(false);
+            return acc.BettingCurrency;
+        }
+    }
+
+    public static async Task MitoRestore(ulong discordId)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            if (acc.Mito <= 350)
+            {
+                acc.Mito = 350;
+            }
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+    }
+
+    public static async Task BettingCurrencyRestore(ulong discordId)
+    {
+        CurrencyInfo? acc;
+        using (var db = new CurrencyInfoContext())
+        {
+            acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            if (acc is null)
+            {
+                await db.AddAsync(new CurrencyInfo { DiscordId = discordId, BettingCurrency = 500, Mito = 500 }).ConfigureAwait(false);
+                await db.SaveChangesAsync();
+                acc = await db.CurrencyInfos.FindAsync(discordId).ConfigureAwait(false);
+            }
+            if (acc.BettingCurrency <= 350)
+            {
+                acc.BettingCurrency = 350;
+            }
+            await db.SaveChangesAsync().ConfigureAwait(false);
+        }
+    }
 }

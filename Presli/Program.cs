@@ -21,6 +21,12 @@ using Microsoft.Extensions.Logging;
 using Lavalink4NET.Players.Queued;
 using Microsoft.Extensions.Options;
 
+var exitCode = Microsoft.Playwright.Program.Main(new[] { "install", "--with-deps", "firefox" });
+if (exitCode != 0)
+{
+    throw new Exception($"Playwright has exited with code {exitCode}");
+}
+
 var builder = new HostApplicationBuilder(args);
 
 DotNetEnv.Env.TraversePath().Load();
@@ -70,6 +76,7 @@ public sealed class Bot : BackgroundService
         {
             Services = new ServiceCollection().AddSingleton<PlayerHelper>(new PlayerHelper(_audioService, _options))
                                               .AddSingleton<IAudioService>(_audioService)
+                                              .AddSingleton<WebScrapingHelper>()
                                               .BuildServiceProvider()
         });
         slash.RegisterCommands<funCommands>();

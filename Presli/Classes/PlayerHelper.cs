@@ -39,7 +39,7 @@ public class PlayerHelper
             var errorMessage = result.Status switch
             {
                 PlayerRetrieveStatus.UserNotInVoiceChannel => "Първо voice channel, след това ще присъствам.",
-                PlayerRetrieveStatus.BotNotConnected => "Няма връзка със сателита.",
+                PlayerRetrieveStatus.BotNotConnected => "ИСКАМ ДА МРЪДНА",
                 _ => "ИСКАМ ДА МРЪДНА",
             };
             Console.WriteLine(errorMessage);
