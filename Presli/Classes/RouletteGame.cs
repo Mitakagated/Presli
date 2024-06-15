@@ -62,6 +62,7 @@ public class RouletteGame
                 {
                     return null;
                 }
+
             case Choice.Two:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
                     .WithContent("Напиши две числа за рулетката. Пример: 21, 15"));
@@ -74,6 +75,7 @@ public class RouletteGame
                 {
                     return null;
                 }
+
             case Choice.Three:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
                     .WithContent("Напиши три числа за рулетката. Пример: 21, 15, 3"));
@@ -86,6 +88,7 @@ public class RouletteGame
                 {
                     return null;
                 }
+
             case Choice.Six:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
                     .WithContent("Напиши шест числа за рулетката. Пример: 21, 15, 3, 6, 1, 29"));
@@ -98,114 +101,88 @@ public class RouletteGame
                 {
                     return null;
                 }
+
             case Choice.Black:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var blackNum = await GetMessageAsync(ctx, separators, 1);
-                if (blackNum.Result is not null)
+                    .WithContent("Ти избра черните числа."));
+                return Enumerable.Range(1, 36).Where(i =>
                 {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    if (i <= 10)
+                    {
+                        return i % 2 == 0;
+                    }
+                    else if (i <= 18)
+                    {
+                        return i % 2 == 1;
+                    }
+                    else if (i <= 28)
+                    {
+                        return i % 2 == 0;
+                    }
+                    else
+                    {
+                        return i % 2 == 1;
+                    }
+                }).ToList();
+
             case Choice.Red:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var redNum = await GetMessageAsync(ctx, separators, 1);
-                if (redNum.Result is not null)
+                    .WithContent("Ти избра червените числа."));
+                return Enumerable.Range(1, 36).Where(i =>
                 {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    if (i <= 10)
+                    {
+                        return i % 2 == 1;
+                    }
+                    else if (i <= 18)
+                    {
+                        return i % 2 == 0;
+                    }
+                    else if (i <= 28)
+                    {
+                        return i % 2 == 1;
+                    }
+                    else
+                    {
+                        return i % 2 == 0;
+                    }
+                }).ToList();
+
             case Choice.Even:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var evenNum = await GetMessageAsync(ctx, separators, 1);
-                if (evenNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра четните числа."));
+                return Enumerable.Range(1, 36).Where(i => i % 2 == 0).ToList();
+
             case Choice.Odd:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var oddNum = await GetMessageAsync(ctx, separators, 1);
-                if (oddNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра нечетните числа"));
+                return Enumerable.Range(1, 36).Where(i => i % 2 == 1).ToList();
+
             case Choice.OneToTwelve:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var twelveNum = await GetMessageAsync(ctx, separators, 1);
-                if (twelveNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра числата от 1 до 12."));
+                return Enumerable.Range(1, 12).ToList();
+
             case Choice.ThirteenToTwentyFour:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var twentyFourNum = await GetMessageAsync(ctx, separators, 1);
-                if (twentyFourNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра числата от 13 до 24."));
+                return Enumerable.Range(13, 12).ToList();
+
             case Choice.TwentyfiveToThirtySix:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var thirtySixNum = await GetMessageAsync(ctx, separators, 1);
-                if (thirtySixNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра числата от 25 до 36."));
+                return Enumerable.Range(25, 12).ToList();
+
             case Choice.FirstHalf:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var eighteenNum = await GetMessageAsync(ctx, separators, 1);
-                if (eighteenNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра числата от 1 до 18"));
+                return Enumerable.Range(1, 18).ToList();
+
             case Choice.SecondHalf:
                 await ctx.CreateResponseAsync(DSharpPlus.InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-                    .WithContent("Напиши едно число за рулетката. Пример: 21"));
-                var thirtySixHalfNum = await GetMessageAsync(ctx, separators, 1);
-                if (thirtySixHalfNum.Result is not null)
-                {
-                    return _userChoices;
-                }
-                else
-                {
-                    return null;
-                }
+                    .WithContent("Ти избра числата от 19 до 36."));
+                return Enumerable.Range(19, 18).ToList();
+
             default:
                 return null;
         }
