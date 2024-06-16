@@ -15,6 +15,7 @@ namespace Presli.commandGroups;
 public class BettingCommands : ApplicationCommandModule
 {
     public WebScrapingHelper WebScrapingHelper { get; set; }
+    public event EventHandler UpdateSearch;
 
     [SlashCommand("bet", "betting commands")]
     public async Task Bet(InteractionContext ctx, [Option("Server", "Сървъра, в който се намира акаунта")] Regions regions, [Option("SummonerName", "Името на акаунта in-game")] string summonerName, [Option("RiotID", "Riot ID на акаунта (тага след името)")] string riotID)
@@ -28,9 +29,24 @@ public class BettingCommands : ApplicationCommandModule
             {
                 Content = $"Ще те тагна когато имам резултати."
             });
-        }
 
-        await ctx.EditResponseAsync(new DiscordWebhookBuilder()
-            .WithContent("Не е направено все още."));
+            UpdateSearch += BettingCommands_UpdateSearch;
+
+            async void BettingCommands_UpdateSearch(object? sender, EventArgs e)
+            {
+                await Bet(ctx, regions, summonerName, riotID).ConfigureAwait(false);
+            }
+
+            if (DateTime.Compare(DateTime.UtcNow, WebScrapingHelper._lastSearched.AddSeconds(5)) > 0)
+            {
+                UpdateSearch?.Invoke(this, EventArgs.Empty);
+                UpdateSearch -= BettingCommands_UpdateSearch;
+            }
+        }
+        else
+        {
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder()
+            .WithContent($"{carryScore}"));
+        }
     }
 }

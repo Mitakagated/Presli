@@ -77,6 +77,7 @@ public sealed class Bot : BackgroundService
             Services = new ServiceCollection().AddSingleton<PlayerHelper>(new PlayerHelper(_audioService, _options))
                                               .AddSingleton<IAudioService>(_audioService)
                                               .AddSingleton<WebScrapingHelper>()
+                                              .AddSingleton<RouletteGame>()
                                               .BuildServiceProvider()
         });
         slash.RegisterCommands<funCommands>();

@@ -13,7 +13,7 @@ public class CurrencyInfo
     [Required]
     public ulong DiscordId { get; set; }
     [DefaultValue(500)]
-    public int Mito { get; set; } = 500;
+    public long Mito { get; set; } = 500;
     [DefaultValue(500)]
-    public int BettingCurrency { get; set; } = 500;
+    public long BettingCurrency { get; set; } = 500;
 }

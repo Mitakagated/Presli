@@ -20,6 +20,6 @@ public class CurrencyInfoContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseNpgsql($"host = localhost; port = 5432; database = postgres; user id = postgres; password = SomePassHere");
+        optionsBuilder.UseNpgsql($"host = localhost; port = 5432; database = postgres; user id = postgres; password = LoLTheBest56");
     }
 }

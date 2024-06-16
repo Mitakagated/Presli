@@ -10,6 +10,7 @@ namespace Presli.Classes;
 public class WebScrapingHelper
 {
     private string? _previousGame;
+    public DateTime _lastSearched;
     private readonly string[] _regions = { "na1", "euw1", "eun1", "kr", "br1", "jp1", "ru", "oc1", "tr1", "la1", "la2", "ph2", "sg2", "th2", "tw2", "vn2" };
     public enum Regions
     {
@@ -44,6 +45,7 @@ public class WebScrapingHelper
         if (_previousGame == null)
         {
             _previousGame = result;
+            _lastSearched = DateTime.UtcNow;
         }
         else if (result != _previousGame)
         {
@@ -54,6 +56,7 @@ public class WebScrapingHelper
             return int.Parse(carryScore);
         }
 
+        _lastSearched = DateTime.UtcNow;
         return 0;
     }
 
